@@ -103,11 +103,16 @@ void max30100_user_init(){
 	max30100_reset(&max30100);
 	max30100_clear_fifo(&max30100);
 
+	if (max30100_begin(&max30100) == false){
+		printf("Pulse oxymeter not works!\r\n");
+	}
+
 	// Sensor settings
 	//max30100_set_led_pulse_width( &max30100, max30100_pw_1600); // pulse width depends of ADC
-	max30100_set_adc_resolution(&max30100, max30100_adc_16_bit);
-	max30100_set_sampling_rate( &max30100, max30100_sr_100);
-	max30100_spo2_hi_res_en(&max30100, max_30100_disable);
+
+	//max30100_set_adc_resolution(&max30100, max30100_adc_16_bit);
+	//max30100_set_sampling_rate( &max30100, max30100_sr_100);
+	//max30100_spo2_hi_res_en(&max30100, max_30100_disable);
 
 	dc_filter_ir.w = 0;
 	dc_filter_ir.result = 0;
@@ -224,7 +229,10 @@ int main(void)
 	  max30100_user_update();
 
 	  printf("BPM: %f \r\n", max30100.heart_BPM);
+#ifdef _SPO2_
 	  printf("SpO2: %f \r\n", max30100.SPO2);
+#endif
+
 #ifdef _TEMPERATURE_
 	temp_out = max30100_read_temp(&max30100);
 	printf("Temp: %f\r\n", temp_out);
@@ -298,7 +306,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.ClockSpeed = 400000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -397,7 +405,7 @@ static void MX_GPIO_Init(void)
 uint8_t max30100_read_i2c_address(I2C_HandleTypeDef *hi2c)
 {
   uint8_t i2c_address = 0;
-  uint8_t tx_data = 0xFF;
+  uint8_t tx_data = 0xFE;
   uint8_t rx_data;
 
   // Send the register address to read

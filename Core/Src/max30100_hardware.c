@@ -3,14 +3,15 @@
 #include "stm32f4xx_hal_i2c.h"
 
 void max30100_write(max30100_t *obj, uint8_t reg, uint8_t *buf, uint16_t buflen){
-	uint8_t res_reg[2] = { reg, buf };
-	HAL_I2C_Master_Transmit(obj->_ui2c, MAX30100_I2C_ADDR << 1, res_reg, 2, MAX30100_I2C_TIMEOUT);
+	//uint8_t res_reg[2] = {reg,buf};
+	//HAL_I2C_Master_Transmit(obj->_ui2c, MAX30100_I2C_ADDR , res_reg, 2, MAX30100_I2C_TIMEOUT);
+	HAL_I2C_Mem_Write(&obj->_ui2c, MAX30100_I2C_ADDR, reg, 1, buf, buflen, 1000);
 }
 
 void max30100_read(max30100_t *obj, uint8_t reg, uint8_t *buf, uint16_t buflen){
 	uint8_t reg_addr = reg;
-	HAL_I2C_Master_Transmit(obj->_ui2c, MAX30100_I2C_ADDR << 1, &reg_addr, 1, MAX30100_I2C_TIMEOUT);
-	HAL_I2C_Master_Receive(obj->_ui2c, MAX30100_I2C_ADDR << 1, buf, buflen, MAX30100_I2C_TIMEOUT);
+	HAL_I2C_Master_Transmit(obj->_ui2c, MAX30100_I2C_ADDR , &reg_addr, 1, MAX30100_I2C_TIMEOUT);
+	HAL_I2C_Master_Receive(obj->_ui2c, MAX30100_I2C_ADDR , buf, buflen, MAX30100_I2C_TIMEOUT);
 }
 
 void max30100_reset(max30100_t *obj)

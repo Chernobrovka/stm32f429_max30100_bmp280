@@ -14,7 +14,7 @@
 #define ALPHA 0.95
 #define MEAN_FILTER_SIZE	15
 
-#define MAX30100_I2C_ADDR 0x07 // 7-bit I2C adress , for 8-bit i2c have another adress
+#define MAX30100_I2C_ADDR 0x57 // 7-bit I2C adress , for 8-bit i2c have another adress
 #define MAX30100_I2C_TIMEOUT 1000
 
 #define MAX30100_BYTES_PER_SAMPLE 4
@@ -59,6 +59,7 @@
 //PART ID
 #define MAX30100_REVISION_ID 0xFE
 #define MAX30100_PART_ID 0xFF
+#define EXPECTED_PART_ID 0x11
 
 #define PULSE_BPM_SAMPLE_SIZE 10
 
@@ -67,6 +68,8 @@ typedef enum max30100_mode_t
     max30100_heart_rate = 0x02,
     max30100_spo2 = 0x03
 } max30100_mode_t;
+
+#define DEFAULT_MODE 0x02 // heart_rate_mode
 
 typedef enum max30100_smp_ave_t
 {
@@ -80,15 +83,17 @@ typedef enum max30100_smp_ave_t
 
 typedef enum max30100_sr_t
 {
-    max30100_sr_50,
-    max30100_sr_100,
-    max30100_sr_167,
-    max30100_sr_200,
-    max30100_sr_400,
-    max30100_sr_600,
-    max30100_sr_800,
-    max30100_sr_1000
+    max30100_sr_50 = 0x00,
+    max30100_sr_100 = 0x01,
+    max30100_sr_167 = 0x02,
+    max30100_sr_200 = 0x03,
+    max30100_sr_400 = 0x04,
+    max30100_sr_600 = 0x05,
+    max30100_sr_800 = 0x06,
+    max30100_sr_1000 = 0x07
 } max30100_sr_t;
+
+#define DEFAULT_SAMPLING_RATE 0x01
 
 typedef enum max30100_adc_t
 {
@@ -126,7 +131,7 @@ typedef enum max30100_pa_t{
 
 typedef enum max30100_hi_res_en_t{
 	max_30100_disable = 0x00,
-	max_30100_enable = 0x01
+	max_30100_enable = (1 << 6)
 }max30100_hi_res_en_t;
 
 typedef struct dc_filter_t {
@@ -206,6 +211,8 @@ void max30100_read_fifo(max30100_t *obj);
 
 // temperature
 float max30100_read_temp(max30100_t *obj);
+
+uint8_t get_part_id(max30100_t *obj);
 
 //interrupt
 //uint8_t max30100_has_interrupt(max30100_t *obj);

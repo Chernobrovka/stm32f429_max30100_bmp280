@@ -5,14 +5,30 @@
  *      Author: Dmitry
  */
 #include "max30100.h"
+#include <stdbool.h>
+///////////////////////////////////////////////
+bool max30100_begin(max30100_t *obj){
+	if (get_part_id(obj) != EXPECTED_PART_ID){
+		return false;
+	}
+
+	max30100_set_mode(obj ,DEFAULT_MODE);
+	max30100_set_adc_resolution(obj, max30100_adc_16_bit);
+	max30100_set_sampling_rate(obj, DEFAULT_SAMPLING_RATE);
+	max30100_led_pa_config(obj, max30100_red_pa_50, red_led);
+	max30100_led_pa_config(obj, max30100_red_pa_50, ir_led);
+	max30100_spo2_hi_res_en(obj, max_30100_enable);
+	return true;
+}
 
 
+//////////////////////////////////////////////////
 void max30100_init(max30100_t *obj, I2C_HandleTypeDef *hi2c)
 {
     obj->_ui2c = hi2c;
     obj->_interrupt_flag = 0;
 
-    obj->current_pulse_detector_state;
+    obj->current_pulse_detector_state = 0;
     obj->last_RED_led_current_check = 0;
 
     memset(obj->_ir_samples, 0, MAX30100_SAMPLE_LEN_MAX * sizeof(uint16_t));
@@ -42,7 +58,14 @@ void max30100_set_mode(max30100_t *obj, max30100_mode_t mode)
 {
     uint8_t config;
     max30100_read(obj, MAX30100_MODE_CONFIG, &config, 1);
-    config = (config & 0xF8) | (uint8_t)mode;
+
+    config = (config & ~(0x07)) | ((uint8_t)mode & 0x07);
+    if (mode == max30100_spo2){
+    	config = config | 0x08;
+    }
+    else if (mode == max30100_heart_rate){
+    	config = config & ~0x08;
+    }
     max30100_write(obj, MAX30100_MODE_CONFIG, &config, 1);
     max30100_clear_fifo(obj);
 }
@@ -52,7 +75,8 @@ void max30100_set_sampling_rate(max30100_t *obj, max30100_sr_t sr)
 {
     uint8_t config;
     max30100_read(obj, MAX30100_SPO2_CONFIG, &config, 1);
-    config = config | ((uint8_t) (sr << 2));
+    //config = (((uint8_t)sr << 2) & 0x1c) | (config & ~0x1c);
+    config = (config & 0xe3) | (sr << 2);
     max30100_write(obj, MAX30100_SPO2_CONFIG, &config, 1);
 }
 
@@ -76,8 +100,14 @@ void max30100_spo2_hi_res_en(max30100_t *obj, max30100_hi_res_en_t hi_res)
 {
 	uint8_t config;
 	max30100_read(obj, MAX30100_SPO2_CONFIG, &config, 1);
-	config = config | ((uint8_t) (hi_res << 6));
-	max30100_write(obj, MAX30100_SPO2_CONFIG, &config, 1);
+	if (hi_res == max_30100_enable){
+		config = config | max_30100_enable;
+		max30100_write(obj, MAX30100_SPO2_CONFIG, &config, 1);
+	}
+	else {
+		config = config & ~max_30100_enable;
+		max30100_write(obj, MAX30100_SPO2_CONFIG, &config, 1);
+	}
 }
 
 void max30100_led_pa_config(max30100_t *obj, max30100_pa_t pa, max30100_leds_t led){
@@ -146,5 +176,9 @@ float max30100_read_temp(max30100_t *obj)
     return temp;
 }
 
-
+uint8_t get_part_id(max30100_t *obj){
+	uint8_t part_id_return;
+	max30100_read(obj, MAX30100_PART_ID, &part_id_return, 1);
+	return part_id_return;
+}
 
