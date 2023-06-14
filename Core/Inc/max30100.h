@@ -184,6 +184,7 @@ void max30100_init(max30100_t *obj, I2C_HandleTypeDef *hi2c);
 void max30100_write(max30100_t *obj, uint8_t reg, uint8_t *buf, uint16_t buflen);
 void max30100_read(max30100_t *obj, uint8_t reg, uint8_t *buf, uint16_t buflen);
 void max30100_reset(max30100_t *obj);
+bool max30100_begin(max30100_t *obj);
 
 void max30100_set_a_full(max30100_t *obj, uint8_t enable);
 
